@@ -37,8 +37,22 @@ router.get('/getData', async ctx => {
     },
     { $sort: { "answer.sn": 1 }}
   ]).toArray()
-  // console.log(data)
-  ctx.response.body = data
+  const categoryKeys = await db.collection('questions').distinct('category')
+  const result = data.map(item => {
+    const answerRecords = []
+    item.answer.forEach(ans => {
+      answerRecords.push({
+        sn: ans.sn,
+        option: ans.option,
+        category: ans.category,
+      })
+    })
+    return {
+      subject: item._id.subject,
+      answers: answerRecords,
+    }
+  })
+  ctx.response.body = {result, categoryKeys}
 })
 
 router.get('/prepareDataByExcel', async ctx => {
@@ -53,21 +67,15 @@ router.get('/prepareDataByExcel', async ctx => {
       const item = {}
       for (var j in value) {
           item[header[j]] = value[j]
-          // console.log(value[j])
-          // arr.push(value[j])
       }
-      // console.log(item)
       await db.collection('questions').insert(item)
   }
-  // console.log(data)
 })
 
 router.get('/test', async ctx => {
   console.log(__dirname)
   const db = await getDb()
-  // console.log(db)
   const data = await db.collection('questions').find({}).toArray()
-  // console.log(data)
   ctx.response.body = data
 })
 app.use(router.routes()).use(router.allowedMethods())
