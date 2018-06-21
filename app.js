@@ -18,9 +18,31 @@ const router = new Router()
 // router.use(bodyParser())
 const MONGO_URL = 'mongodb://psychological:psychological-ruqi@localhost:27017/Psychological'
 const getDb = constructGetDb(MONGO_URL)
+const bodyParser = require('koa-bodyparser')
 
 router.get('/healthcheck', ctx => {
   ctx.body = 'OK'
+})
+
+router.get('/saveResult', async ctx => {
+  // const queryStringModule = require('querystring');
+  // let postData = '';
+  // ctx.req.on('params', function (chunk) {
+  // 　　postData += chunk;//接收数据
+  // });
+  // let params = queryStringModule.parse(postData);//解析数据 获得Json对象
+  // let value = params.key;//通过参数名称获得参数值
+  // console.log(params)
+  // const { nickname, age } = ctx
+  const urlModule = require('url')
+  let params = urlModule.parse(ctx.url, true).query // 解析数据 获得Json对象
+  let value = params.key // 通过参数名称获得参数值
+  // console.log(JSON.stringify(params))
+  // const { paperResult } = params
+  // console.log(paperResult)
+  const db = await getDb()
+  await db.collection('results').insert({ ...params, createdAt: new Date() })
+  ctx.response.body = 'OK'
 })
 
 router.get('/getData', async ctx => {
@@ -31,23 +53,24 @@ router.get('/getData', async ctx => {
     },
     {
       $group: {
-        _id: { "subject": "$subject" },
-        "answer": { $push: { "sn": "$sn", "option": "$option", "category": "$category" }},
+        _id: { "sn": "$sn", "subject": "$subject" },
+        "answer": { $push: { "option": "$option", "category": "$category" }},
       }
     },
-    { $sort: { "answer.sn": 1 }}
+    { $sort: { "_id.sn": 1 }}
   ]).toArray()
   const categoryKeys = await db.collection('questions').distinct('category')
   const result = data.map(item => {
     const answerRecords = []
     item.answer.forEach(ans => {
       answerRecords.push({
-        sn: ans.sn,
+        // sn: item._id.sn,
         option: ans.option,
         category: ans.category,
       })
     })
     return {
+      sn: item._id.sn,
       subject: item._id.subject,
       answers: answerRecords,
     }
@@ -79,6 +102,7 @@ router.get('/test', async ctx => {
   ctx.response.body = data
 })
 app.use(router.routes()).use(router.allowedMethods())
+app.use(bodyParser())
 
 app.use(async (ctx) => {
   ctx.body = 'OK'
