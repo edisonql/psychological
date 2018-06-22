@@ -26,6 +26,7 @@
     "eslint": "^4.19.1",
     "koa": "^2.5.1",
     "koa-bodyparser": "^4.2.1",
+    "koa-cors": "^0.0.16",
     "koa-router": "^7.4.0",
     "mongodb-auto-reconnect": "^0.0.1",
     "node-xlsx": "^0.12.0",
