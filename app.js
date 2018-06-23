@@ -1,4 +1,4 @@
-import convert from 'koa-convert'
+// import convert from 'koa-convert'
 import cors from 'koa2-cors'
 require('babel-register')
 var xlsx = require('node-xlsx')
@@ -11,19 +11,19 @@ const MONGO_URL = 'mongodb://psychological:psychological-ruqi@localhost:27017/Ps
 const getDb = constructGetDb(MONGO_URL)
 const bodyParser = require('koa-bodyparser')
 
-app.use(cors({
-    origin: function (ctx) {
-        // if (ctx.url === '/test') {
-        //     return "*"; // 允许来自所有域名请求
-        // }
-        return '*'
-    },
-    exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-    maxAge: 5,
-    credentials: true,
-    allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
-}))
+// app.use(cors({
+//     origin: function (ctx) {
+//         // if (ctx.url === '/test') {
+//         //     return "*"; // 允许来自所有域名请求
+//         // }
+//         return '*'
+//     },
+//     exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+//     maxAge: 5,
+//     credentials: true,
+//     allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+//     allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+// }))
 
 router.get('/healthcheck', ctx => {
   ctx.body = 'OK'
@@ -108,7 +108,7 @@ router.get('/test', async ctx => {
 })
 app.use(router.routes()).use(router.allowedMethods())
 app.use(bodyParser())
-app.use(convert(cors()))
+app.use(cors())
 app.use(async (ctx) => {
   ctx.body = 'OK'
 })
