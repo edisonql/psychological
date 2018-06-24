@@ -1,5 +1,6 @@
 // import convert from 'koa-convert'
 import cors from 'koa2-cors'
+import map from 'lodash/map'
 require('babel-register')
 var xlsx = require('node-xlsx')
 const Router = require('koa-router')
@@ -24,33 +25,38 @@ const bodyParser = require('koa-bodyparser')
 //     allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
 //     allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
 // }))
+app.use(cors())
+app.use(bodyParser())
 
 router.get('/healthcheck', ctx => {
   ctx.body = 'OK'
 })
 
-router.get('/saveResult', async ctx => {
-  // const queryStringModule = require('querystring');
-  // let postData = '';
-  // ctx.req.on('params', function (chunk) {
-  // 　　postData += chunk;//接收数据
-  // });
-  // let params = queryStringModule.parse(postData);//解析数据 获得Json对象
-  // let value = params.key;//通过参数名称获得参数值
-  // console.log(params)
-  // const { nickname, age } = ctx
-  const urlModule = require('url')
-  let params = urlModule.parse(ctx.url, true).query // 解析数据 获得Json对象
-  let value = params.key // 通过参数名称获得参数值
-  // console.log(JSON.stringify(params))
-  // const { paperResult } = params
-  // console.log(paperResult)
+router.post('/saveResult', async ctx => {
+  const { data } = ctx.request.body
+  // console.log(data.paperResult)
+  const queryStringModule = require('querystring');
+  let params = queryStringModule.parse(data);//解析数据 获得Json对象
+  // console.log(typeof params.paperResult)
+  // map(JSON.stringify(params.paperResult), (value, key) => {
+  //   console.log(key, '---', value)
+  // })
+  // const urlModule = require('url')
+  // let params = urlModule.parse(ctx.url, true).query // 解析数据 获得Json对象
+  // let value = params.key // 通过参数名称获得参数值
+  // console.log(params);
+  // // console.log(JSON.stringify(params))
+  // // const { paperResult } = params
+  // // console.log(paperResult)
+  // const paperResult =
   const db = await getDb()
   await db.collection('results').insert({ ...params, createdAt: new Date() })
+  ctx.set('Access-Control-Allow-Origin', '*')
   ctx.response.body = 'OK'
 })
 
 router.get('/getData', async ctx => {
+  console.log('get data')
   const db = await getDb()
   const data = await db.collection('questions').aggregate([
     {
@@ -80,6 +86,8 @@ router.get('/getData', async ctx => {
       answers: answerRecords,
     }
   })
+  // ctx.set('Access-Control-Allow-Credentials', 'true')
+  ctx.set('Access-Control-Allow-Origin', '*')
   ctx.response.body = {result, categoryKeys}
 })
 
@@ -107,8 +115,6 @@ router.get('/test', async ctx => {
   ctx.response.body = data
 })
 app.use(router.routes()).use(router.allowedMethods())
-app.use(bodyParser())
-app.use(cors())
 app.use(async (ctx) => {
   ctx.body = 'OK'
 })
